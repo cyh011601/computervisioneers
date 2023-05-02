@@ -147,21 +147,23 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def train(model, datasets, checkpoint_path, logs_path, init_epoch):
     """ Training routine. """
+     # Keras callbacks for training
+    callback_list = [
+        tf.keras.callbacks.TensorBoard(
+            log_dir=logs_path,
+            update_freq='batch',
+            profile_batch=0),
+        ImageLabelingLogger(logs_path, datasets),
+        CustomModelSaver(checkpoint_path, 3, hp.max_num_weights)
+    ]
     # Begin training
-    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-    filepath=checkpoint_path,
-    save_weights_only=True,
-    monitor='val_accuracy',
-    mode='max',
-    save_best_only=True)
-
     model.fit(
         x=datasets.train_data,
         validation_data=datasets.test_data,
         epochs=hp.num_epochs,
         batch_size=None,            # Required as None as we use an ImageDataGenerator; see preprocess.py get_data()
         initial_epoch=init_epoch,
-        callbacks=[model_checkpoint_callback]
+         callbacks=callback_list
     )
 
 
