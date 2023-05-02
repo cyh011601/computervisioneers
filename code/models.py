@@ -28,9 +28,6 @@ def baseline_model(data):
        print(dummy_clf.score(X, y)) # prints the validation accuracy 
 
 class VGGModel(tf.keras.Model):
-       '''
-       Creates the VGG blocks and the classifier head. 
-       '''
     def __init__(self):
         super(VGGModel, self).__init__()
 
