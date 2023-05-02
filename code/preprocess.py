@@ -120,11 +120,11 @@ class Datasets():
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
 
-        if self.task == '3':
-            img = tf.keras.applications.vgg16.preprocess_input(img)
-        else:
-            img = img / 255.
-            img = self.standardize(img)
+        # if self.task == '3':
+        img = tf.keras.applications.vgg16.preprocess_input(img)
+        # else:
+        #     img = img / 255.
+        #     img = self.standardize(img)
         return img
 
     def get_data(self, path, shuffle, augment):
