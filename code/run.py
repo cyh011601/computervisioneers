@@ -12,7 +12,7 @@ from datetime import datetime
 import tensorflow as tf
 
 import hyperparameters as hp
-from models import YourModel, VGGModel
+from models import VGGModel
 from preprocess import Datasets
 from skimage.transform import resize
 from tensorboard_utils import \
@@ -147,35 +147,18 @@ def LIME_explainer(model, path, preprocess_fn, timestamp):
 
 def train(model, datasets, checkpoint_path, logs_path, init_epoch):
     """ Training routine. """
-
-    # Keras callbacks for training
-    callback_list = [
-        tf.keras.callbacks.TensorBoard(
-            log_dir=logs_path,
-            update_freq='batch',
-            profile_batch=0),
-        ImageLabelingLogger(logs_path, datasets),
-        CustomModelSaver(checkpoint_path, ARGS.task, hp.max_num_weights)
-    ]
-
-    # Include confusion logger in callbacks if flag set
-    if ARGS.confusion:
-        callback_list.append(ConfusionMatrixLogger(logs_path, datasets))
-
     # Begin training
     model.fit(
         x=datasets.train_data,
         validation_data=datasets.test_data,
         epochs=hp.num_epochs,
         batch_size=None,            # Required as None as we use an ImageDataGenerator; see preprocess.py get_data()
-        callbacks=callback_list,
         initial_epoch=init_epoch,
     )
 
 
 def test(model, test_data):
     """ Testing routine. """
-
     # Run model on test set
     model.evaluate(
         x=test_data,
@@ -185,6 +168,10 @@ def test(model, test_data):
 
 def main():
     """ Main function. """
+    data = '..'+os.sep+'data'+os.sep
+    load_vgg = 'vgg16_imagenet.h5'
+    load_checkpoint = None
+    evaluate = False
 
     time_now = datetime.now()
     timestamp = time_now.strftime("%m%d%y-%H%M%S")
@@ -192,61 +179,58 @@ def main():
 
     # If loading from a checkpoint, the loaded checkpoint's directory
     # will be used for future checkpoints
-    if ARGS.load_checkpoint is not None:
-        ARGS.load_checkpoint = os.path.abspath(ARGS.load_checkpoint)
+    if load_checkpoint is not None:
+        load_checkpoint = os.path.abspath(load_checkpoint)
 
         # Get timestamp and epoch from filename
         regex = r"(?:.+)(?:\.e)(\d+)(?:.+)(?:.h5)"
-        init_epoch = int(re.match(regex, ARGS.load_checkpoint).group(1)) + 1
-        timestamp = os.path.basename(os.path.dirname(ARGS.load_checkpoint))
+        init_epoch = int(re.match(regex, load_checkpoint).group(1)) + 1
+        timestamp = os.path.basename(os.path.dirname(load_checkpoint))
 
     # If paths provided by program arguments are accurate, then this will
     # ensure they are used. If not, these directories/files will be
     # set relative to the directory of run.py
-    if os.path.exists(ARGS.data):
-        ARGS.data = os.path.abspath(ARGS.data)
-    if os.path.exists(ARGS.load_vgg):
-        ARGS.load_vgg = os.path.abspath(ARGS.load_vgg)
+    if os.path.exists(data):
+        data = os.path.abspath(data)
+    if os.path.exists(load_vgg):
+        load_vgg = os.path.abspath(load_vgg)
 
     # Run script from location of run.py
     os.chdir(sys.path[0])
 
-    datasets = Datasets(ARGS.data, ARGS.task)
+    datasets = Datasets(data)
 
-    if ARGS.task == '1':
-        model = YourModel()
-        model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
-        checkpoint_path = "checkpoints" + os.sep + \
-            "your_model" + os.sep + timestamp + os.sep
-        logs_path = "logs" + os.sep + "your_model" + \
-            os.sep + timestamp + os.sep
+    # if ARGS.task == '1':
+    #     model = YourModel()
+    #     model(tf.keras.Input(shape=(hp.img_size, hp.img_size, 3)))
+    #     checkpoint_path = "checkpoints" + os.sep + \
+    #         "your_model" + os.sep + timestamp + os.sep
+    #     logs_path = "logs" + os.sep + "your_model" + \
+    #         os.sep + timestamp + os.sep
 
-        # Print summary of model
-        model.summary()
-    else:
-        model = VGGModel()
-        checkpoint_path = "checkpoints" + os.sep + \
-            "vgg_model" + os.sep + timestamp + os.sep
-        logs_path = "logs" + os.sep + "vgg_model" + \
-            os.sep + timestamp + os.sep
-        model(tf.keras.Input(shape=(224, 224, 3)))
+    #     # Print summary of model
+    #     model.summary()
+    # else:
+    model = VGGModel()
+    checkpoint_path = "checkpoints" + os.sep + \
+        "vgg_model" + os.sep + timestamp + os.sep
+    logs_path = "logs" + os.sep + "vgg_model" + \
+        os.sep + timestamp + os.sep
+    model(tf.keras.Input(shape=(224, 224, 3)))
 
-        # Print summaries for both parts of the model
-        model.vgg16.summary()
-        model.head.summary()
+    # Print summaries for both parts of the model
+    model.vgg16.summary()
+    model.head.summary()
 
-        # Load base of VGG model
-        model.vgg16.load_weights(ARGS.load_vgg, by_name=True)
+    # Load base of VGG model
+    model.vgg16.load_weights(load_vgg, by_name=True)
 
     # Load checkpoints
-    if ARGS.load_checkpoint is not None:
-        if ARGS.task == '1':
-            model.load_weights(ARGS.load_checkpoint, by_name=False)
-        else:
-            model.head.load_weights(ARGS.load_checkpoint, by_name=False)
+    if load_checkpoint is not None:
+        model.head.load_weights(load_checkpoint, by_name=False)
 
     # Make checkpoint directory if needed
-    if not ARGS.evaluate and not os.path.exists(checkpoint_path):
+    if not evaluate and not os.path.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
 
     # Compile model graph
@@ -255,19 +239,19 @@ def main():
         loss=model.loss_fn,
         metrics=["sparse_categorical_accuracy"])
 
-    if ARGS.evaluate:
+    if evaluate:
         test(model, datasets.test_data)
 
         # TODO: change the image path to be the image of your choice by changing
         # the lime-image flag when calling run.py to investigate
         # i.e. python run.py --evaluate --lime-image test/Bedroom/image_003.jpg
-        path = ARGS.lime_image
-        LIME_explainer(model, path, datasets.preprocess_fn, timestamp)
+        # path = ARGS.lime_image
+        # LIME_explainer(model, path, datasets.preprocess_fn, timestamp)
     else:
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
 
 
 # Make arguments global
-ARGS = parse_args()
+# ARGS = parse_args()
 
 main()
