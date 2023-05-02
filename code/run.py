@@ -12,7 +12,7 @@ from datetime import datetime
 import tensorflow as tf
 
 import hyperparameters as hp
-from models import VGGModel
+from models import VGGModel, baseline_model
 from preprocess import Datasets
 from skimage.transform import resize
 from tensorboard_utils import \
@@ -256,10 +256,7 @@ def main():
         # path = ARGS.lime_image
         # LIME_explainer(model, path, datasets.preprocess_fn, timestamp)
     else:
+        # baseline_model(datasets.test_data) (uncomment for baseline model performance)
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
-
-
-# Make arguments global
-# ARGS = parse_args()
 
 main()

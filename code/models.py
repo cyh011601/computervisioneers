@@ -9,11 +9,28 @@ Brown University
 import tensorflow as tf
 from keras.layers import \
        Conv2D, MaxPool2D, Dropout, Flatten, Dense, BatchNormalization
+import numpy as np
 
 import hyperparameters as hp
+from sklearn.dummy import DummyClassifier
 
+def baseline_model(data):
+       '''
+       Creates a baseline model using scikit-learn. This model
+       only predicts the answer "happy"/class index 3 (the most frequent answer in 
+       the training set), ignoring the actual image. 
+       '''
+       y = np.concatenate([y for x, y in data], axis=0)
+       X = np.concatenate([x for x, y in data], axis=0)
+       dummy_clf = DummyClassifier(strategy="constant",
+                                   constant = tf.tensor([3])) 
+       dummy_clf.fit(None, tf.tensor([3])) # fit the model to only predict the index 3
+       print(dummy_clf.score(X, y)) # prints the validation accuracy 
 
 class VGGModel(tf.keras.Model):
+       '''
+       Creates the VGG blocks and the classifier head. 
+       '''
     def __init__(self):
         super(VGGModel, self).__init__()
 
