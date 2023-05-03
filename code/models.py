@@ -8,8 +8,9 @@ Brown University
 
 import tensorflow as tf
 from keras.layers import \
-       Conv2D, MaxPool2D, Dropout, Flatten, Dense, BatchNormalization
+       Conv2D, MaxPool2D, Dropout, Flatten, Dense, BatchNormalization, InputLayer
 import numpy as np
+from keras import Input
 
 import hyperparameters as hp
 from sklearn.dummy import DummyClassifier
@@ -29,10 +30,8 @@ def baseline_model(data):
 
 class VGGModel(tf.keras.Model):
     def __init__(self):
-        super(VGGModel, self).__init__()
-
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=hp.learning_rate)
-
+        super(VGGModel, self).__init__()#, tf.keras.layers.Dense(15, activation="softmax", use_bias=True)(input))
         self.vgg16 = [
             # Block 1
             Conv2D(64, 3, 1, padding="same",
@@ -85,13 +84,11 @@ class VGGModel(tf.keras.Model):
                tf.keras.layers.Dense(15, activation="softmax", use_bias=True)
 
         ]
-
         self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
         self.head = tf.keras.Sequential(self.head, name="vgg_head")
 
-    def call(self, x):
+    def call(self, x, training=False):
         """ Passes the image through the network. """
-
         x = self.vgg16(x)
         x = self.head(x)
 
