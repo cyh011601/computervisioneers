@@ -78,13 +78,12 @@ class VGGModel(tf.keras.Model):
 
         # Classification head 
         self.head = [
-               Dropout(rate=0.3),
-               tf.keras.layers.Flatten(),
-               tf.keras.layers.Dense(512, activation="relu", use_bias=True),
-               tf.keras.layers.Dense(512, activation="relu", use_bias=True),
-               tf.keras.layers.Dense(15, activation="softmax", use_bias=True)
-
-        ]
+               Flatten(),
+               Dense(units=128, activation="relu"),
+               Dropout(0.2),      
+               Dense(units=64, activation="relu"),
+               Dropout(0.1),
+               Dense(units=15, activation="softmax")]
 
         self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
         self.head = tf.keras.Sequential(self.head, name="vgg_head")
