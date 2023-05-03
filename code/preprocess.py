@@ -9,6 +9,7 @@ import random
 import numpy as np
 from PIL import Image
 import tensorflow as tf
+import cv2
 
 import hyperparameters as hp
 
@@ -116,11 +117,50 @@ class Datasets():
         img = (img - self.mean)/self.std
 
         return img
+    
+
+    def detectFaceOpenCVHaar(self, faceCascade, frame, inHeight=300, inWidth=0):
+        frameOpenCVHaar = frame.copy()
+        frameHeight = frameOpenCVHaar.shape[0]
+        frameWidth = frameOpenCVHaar.shape[1]
+        if not inWidth:
+            inWidth = int((frameWidth / frameHeight) * inHeight)
+
+        scaleHeight = frameHeight / inHeight
+        scaleWidth = frameWidth / inWidth
+
+        frameOpenCVHaarSmall = cv2.resize(frameOpenCVHaar, (inWidth, inHeight))
+        frameGray = cv2.cvtColor(frameOpenCVHaarSmall, cv2.COLOR_BGR2GRAY)
+
+        faces = faceCascade.detectMultiScale(frameGray)
+        bboxes = []
+        for (x, y, w, h) in faces:
+            x1 = x
+            y1 = y
+            x2 = x + w
+            y2 = y + h
+            cvRect = [int(x1 * scaleWidth), int(y1 * scaleHeight),
+                    int(x2 * scaleWidth), int(y2 * scaleHeight)]
+            bboxes.append(cvRect)
+            cv2.rectangle(frameOpenCVHaar, (cvRect[0], cvRect[1]), (cvRect[2], cvRect[3]), (0, 255, 0),
+                        int(round(frameHeight / 150)), 4)
+        return frameOpenCVHaar, bboxes         
 
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
-
         # if self.task == '3':
+        faceCascade = cv2.CascadeClassifier('haarcascade_eye.xml') 
+        img = np.array(img, dtype='uint8')
+        # print(np.shape(img))
+        outOpencvHaar, bboxes = self.detectFaceOpenCVHaar(faceCascade, img, inHeight=300, inWidth=0)   
+        # print(len(bboxes))
+        for i in range(len(bboxes)):
+            if i == 0:
+                idk = img[bboxes[i][0]:bboxes[i][0]+16, bboxes[i][1]:bboxes[i][1]+16]
+                image = Image.fromarray(idk)
+                img = image.resize((224, 224))
+                img = np.array(img, dtype=np.float32)
+                break
         img = tf.keras.applications.vgg16.preprocess_input(img)
         # else:
         #     img = img / 255.
