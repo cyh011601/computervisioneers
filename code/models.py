@@ -82,7 +82,6 @@ class VGGModel(tf.keras.Model):
                Dense(units=128, activation="relu"),
                Dropout(0.2),      
                Dense(units=64, activation="relu"),
-               Dropout(0.1),
                Dense(units=15, activation="softmax")]
 
         self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
