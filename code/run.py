@@ -132,7 +132,7 @@ def main():
     """ Main function. """
     data = '..'+os.sep+'data'+os.sep
     load_vgg = 'vgg16_imagenet.h5'
-    load_checkpoint = '/content/computervisioneers/code/checkpoints/vgg_model/code/vgg.weights.e038-acc0.5135.h5'
+    load_checkpoint = None 
     evaluate = False
     explain = False
 
