@@ -81,7 +81,7 @@ class VGGModel(tf.keras.Model):
                tf.keras.layers.Flatten(),
                tf.keras.layers.Dense(512, activation="relu", use_bias=True),
                tf.keras.layers.Dense(512, activation="relu", use_bias=True),
-               tf.keras.layers.Dense(7, activation="softmax", use_bias=True)
+               tf.keras.layers.Dense(15, activation="softmax", use_bias=True)
 
         ]
         self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
