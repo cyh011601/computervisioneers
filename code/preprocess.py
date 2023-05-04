@@ -119,12 +119,7 @@ class Datasets():
 
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
-
-        # if self.task == '3':
         img = tf.keras.applications.vgg16.preprocess_input(img)
-        # else:
-        #     img = img / 255.
-        #     img = self.standardize(img)
         return img
 
     def get_data(self, path, shuffle, augment):
@@ -144,23 +139,14 @@ class Datasets():
         Returns:
             An iterable image-batch generator
         """
-
-        if augment:
-            # ============================================================
-
-            data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=self.preprocess_fn,
-                zoom_range=0.2,
-                width_shift_range=0.2,
-                height_shift_range=0.2,
-                brightness_range=[0.3,0.9],
-                horizontal_flip=True
-                )
-
-            # ============================================================
-        else:
-            data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=self.preprocess_fn)
+        data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
+            preprocessing_function=self.preprocess_fn,
+            zoom_range=0.2,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            brightness_range=[0.3,0.9],
+            horizontal_flip=True
+            )
 
         # VGG must take images of size 224x224
         img_size = 224
