@@ -120,6 +120,8 @@ class Datasets():
     
 
     def detectFaceOpenCVHaar(self, faceCascade, frame, inHeight=300, inWidth=0):
+        """function for detecting the eyes in a given image and returning
+        a bounding box around the feature points."""
         frameOpenCVHaar = frame.copy()
         frameHeight = frameOpenCVHaar.shape[0]
         frameWidth = frameOpenCVHaar.shape[1]
@@ -148,23 +150,21 @@ class Datasets():
 
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
-        # if self.task == '3':
         faceCascade = cv2.CascadeClassifier('haarcascade_eye.xml') 
         img = np.array(img, dtype='uint8')
-        # print(np.shape(img))
-        outOpencvHaar, bboxes = self.detectFaceOpenCVHaar(faceCascade, img, inHeight=300, inWidth=0)   
-        # print(len(bboxes))
+        # get the bounding boxes around the eyes 
+        _, bboxes = self.detectFaceOpenCVHaar(faceCascade, img, inHeight=300, inWidth=0)   
         for i in range(len(bboxes)):
+            # returns a separate box for each eye, so just use the coordinates of the box
+            # around the leftmost eye and crop to the right/downwards. 
             if i == 0:
                 idk = img[bboxes[i][0]:bboxes[i][0]+16, bboxes[i][1]:bboxes[i][1]+16]
                 image = Image.fromarray(idk)
                 img = image.resize((224, 224))
                 img = np.array(img, dtype=np.float32)
                 break
+        # preprocess. 
         img = tf.keras.applications.vgg16.preprocess_input(img)
-        # else:
-        #     img = img / 255.
-        #     img = self.standardize(img)
         return img
 
     def get_data(self, path, shuffle, augment):

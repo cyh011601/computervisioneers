@@ -8,7 +8,7 @@ Brown University
 
 import tensorflow as tf
 from keras.layers import \
-       Conv2D, MaxPool2D, Dropout, Flatten, Dense, BatchNormalization
+       Conv2D, MaxPool2D, Dropout
 import numpy as np
 
 import hyperparameters as hp
@@ -80,9 +80,8 @@ class VGGModel(tf.keras.Model):
         self.head = [
                Dropout(rate=0.3),
                tf.keras.layers.Flatten(),
-               tf.keras.layers.Dense(512, activation="relu", use_bias=True),
-               tf.keras.layers.Dense(512, activation="relu", use_bias=True),
-               tf.keras.layers.Dense(15, activation="softmax", use_bias=True)
+               tf.keras.layers.Dense(128, activation="relu", use_bias=True),
+               tf.keras.layers.Dense(7, activation="softmax", use_bias=True)
 
         ]
 
