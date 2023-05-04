@@ -132,9 +132,9 @@ def main():
     """ Main function. """
     data = '..'+os.sep+'data'+os.sep
     load_vgg = 'vgg16_imagenet.h5'
-    load_checkpoint = None
+    load_checkpoint = '/content/computervisioneers/code/vgg.weights.e019-acc0.4861.h5'
     evaluate = False
-    explain = True 
+    explain = False
 
     time_now = datetime.now()
     timestamp = time_now.strftime("%m%d%y-%H%M%S")
